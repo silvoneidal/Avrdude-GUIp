@@ -43,7 +43,7 @@ import PIL.Image
 
 # Lista de chips
 chips = []
-chips.extend(["atmega8", "atmega328", "attiny13", "attiny85"])
+chips.extend(["atmega328", "atmega8", "attiny13", "attiny85"])
 
 # Lista de programadores
 progs = []
@@ -122,6 +122,7 @@ def on_checkbox3_toggle():
         upload_cmd_button.configure(state='normal')
 
 def send_command():
+    text_dados.configure(state='normal')
     # Limpa área de texto de dados e comando
     text_dados.delete("1.0", "end")
     text_dados.update_idletasks()
@@ -135,11 +136,11 @@ def send_command():
     upload_prog = prog_select_combo.get()
     
     # Atualiza a variável upload_chip e upload_lock
-    if chip_select_combo.get() == "atmega8":
-        upload_chip = "m8"
-        upload_lock = "0x0C"
-    elif chip_select_combo.get() == "atmega328":
+    if chip_select_combo.get() == "atmega328":
         upload_chip = "m328"
+        upload_lock = "0x0C"
+    elif chip_select_combo.get() == "atmega8":
+        upload_chip = "m8"
         upload_lock = "0x0C"
     elif chip_select_combo.get() == "attiny13":
         upload_chip = "t13"
@@ -202,6 +203,8 @@ def send_command():
         #print(f"O comando falhou com o código {e.returncode}.")
         #print(e.output)
 
+    text_dados.configure(state='disabled')
+
 def get_bootloader_file(chip):
     global upload_boot
     dir_atual = os.path.dirname(__file__)
@@ -217,7 +220,7 @@ def send_command_extern():
 # Interface CustomTkinter
 root = ctk.CTk()
 root.title("Avrdude-GUI")
-root.geometry("850x550")
+root.geometry("850x560")
 
 # Frame para configurações
 frame_port = ctk.CTkFrame(root)
@@ -283,6 +286,7 @@ upload_cmd_button.configure(state='disabled')
 # Área de texto para exibir dados 
 text_dados = ctk.CTkTextbox(frame_text, font=new_fonte, width=820, height=250)
 text_dados.grid(row=0, column=0, padx=5, pady=5)
+text_dados.configure(state='disabled')
 
 # Área de texto para exibir comandos
 text_cmd = ctk.CTkTextbox(frame_text, font=new_fonte, width=820, height=20)
