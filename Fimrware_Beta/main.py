@@ -78,12 +78,13 @@ def scan_port_combo():
         com_port_combo.set(portas[0])  # Seleciona a primeira porta, se houver
 
 def search_file():
+    text_file.configure(state='normal')  # Habilita texto para file
     # Abre a caixa de diálogo para selecionar um arquivo
     file_select = filedialog.askopenfilename(title="Selecione um arquivo")
     # Se um arquivo for selecionado, atualiza o campo de texto
     text_file.delete(0, ctk.END) # Limpa o campo de texto
     text_file.insert(0, file_select) # Insere o caminho do arquivo selecionado no campo de texto
-    upload_cmd_button.configure(state='normal') # Habilita botão para upload
+    text_file.configure(state='disabled')  # Desbilita texto para file
 
 # Função chamada quando o estado da checkbox é alterado
 def on_checkbox1_toggle():
@@ -91,12 +92,13 @@ def on_checkbox1_toggle():
     # Se checkbox lock selecionado
     if checkbox_var1.get() == 1 and checkbox_var2.get() == 0 :
         checkbox_var3.set(0)  # Desmarca Lock
+    if checkbox_var2.get() == 1 and text_file.get() == "" :
+        upload_cmd_button.configure(state='disabled')
+    if checkbox_var2.get() == 0 :
+        upload_cmd_button.configure(state='normal')
     # Nenhum checkbox selecionado
     if checkbox_var1.get() == 0 and checkbox_var2.get() == 0 and checkbox_var3.get() == 0 :
-        upload_cmd_button.configure(state='disabled')
-    else:
-        upload_cmd_button.configure(state='normal')
-        
+        upload_cmd_button.configure(state='disabled')        
 
 def on_checkbox2_toggle():
     # SKETCH
@@ -108,22 +110,23 @@ def on_checkbox2_toggle():
     else:
         upload_cmd_button.configure(state='normal')
     # Se checkbox sketch selecionado e texto file em branco
-    if checkbox_var2.get() == 1 and text_file.get() == "":
+    if checkbox_var2.get() == 1 and text_file.get() == "" :
         upload_cmd_button.configure(state='disabled')
 
 def on_checkbox3_toggle():
     # LOCK
     if checkbox_var1.get() == 1 and checkbox_var2.get() == 0 :
         checkbox_var3.set(0)  # Desmarca Lock
+    if checkbox_var2.get() == 1 and text_file.get() == "" :
+        upload_cmd_button.configure(state='disabled')
+    if checkbox_var1.get() == 0 and checkbox_var2.get() == 0 :
+        upload_cmd_button.configure(state='normal')
     # Nenhum checkbox selecionado
     if checkbox_var1.get() == 0 and checkbox_var2.get() == 0 and checkbox_var3.get() == 0 :
         upload_cmd_button.configure(state='disabled')
-    else:
-        upload_cmd_button.configure(state='normal')
 
 def send_command():
     text_dados.configure(state='normal')
-    
     # Limpa área de texto de dados e comando
     text_dados.delete("1.0", "end")
     text_dados.update_idletasks()
@@ -232,7 +235,7 @@ frame_text = ctk.CTkFrame(root)
 frame_text.pack(pady=10)
 
 # Carregue a imagem com PIL e crie um CTkImage
-image = Image.open("DALCOQUIO-AUTOMACAO.bmp")
+image = Image.open("Logo.bmp")
 ctk_image = ctk.CTkImage(image, size=(820, 120))  # Ajuste o tamanho conforme necessário
 
 # Crie um CTkLabel dentro do frame para exibir a imagem
@@ -274,6 +277,7 @@ checkbox3.grid(row=0, column=6, padx=10, pady=10)
 #Área de texto para sketch.hex
 text_file = ctk.CTkEntry(frame_file, font=new_fonte, width=600)
 text_file.grid(row=1, column=0, padx=5, pady=10)
+text_file.configure(state='disabled')
 
 # Botão para buscar sketch.hex
 search_file_button = ctk.CTkButton(frame_file, font=new_fonte, text="File", command=search_file, width=100)
