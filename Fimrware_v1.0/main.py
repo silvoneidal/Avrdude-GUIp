@@ -47,7 +47,7 @@ chips.extend(["atmega328", "atmega8", "attiny13", "attiny85"])
 
 # Lista de programadores
 progs = []
-progs.extend(["Arduino", "usbasp"])
+progs.extend(["ArduinoISP", "Arduino", "UsbAsp"])
 
 # Inicialização do customtkinter
 ctk.set_appearance_mode("dark")  # Define o modo de aparência (dark/light/system)
@@ -58,6 +58,7 @@ new_fonte = ("Courier New", 12)
 upload_prog = None
 upload_chip = None
 upload_port = None
+upload_baud = None
 upload_file = None
 upload_boot = None
 upload_lock = None
@@ -80,7 +81,7 @@ def scan_port_combo():
 def search_file():
     text_file.configure(state='normal')  # Habilita texto para file
     # Abre a caixa de diálogo para selecionar um arquivo
-    file_select = filedialog.askopenfilename(title="Selecione um arquivo")
+    file_select = filedialog.askopenfilename(filetypes=(("Arquivos hexadecimais", "*.hex"), ("", "")))
     # Se um arquivo for selecionado, atualiza o campo de texto
     text_file.delete(0, ctk.END) # Limpa o campo de texto
     text_file.insert(0, file_select) # Insere o caminho do arquivo selecionado no campo de texto
@@ -98,7 +99,10 @@ def on_checkbox1_toggle():
         upload_cmd_button.configure(state='normal')
     # Nenhum checkbox selecionado
     if checkbox_var1.get() == 0 and checkbox_var2.get() == 0 and checkbox_var3.get() == 0 :
-        upload_cmd_button.configure(state='disabled')        
+        upload_cmd_button.configure(state='disabled')
+     # Se programdor selecionado for "Arduino"
+    if prog_select_combo.get() == "Arduino" :
+        checkbox_var1.set(0)  # Desmarca Bootloader
 
 def on_checkbox2_toggle():
     # SKETCH
@@ -112,6 +116,10 @@ def on_checkbox2_toggle():
     # Se checkbox sketch selecionado e texto file em branco
     if checkbox_var2.get() == 1 and text_file.get() == "" :
         upload_cmd_button.configure(state='disabled')
+    # Se programdor selecionado for "Arduino"
+    if prog_select_combo.get() == "Arduino" :
+        checkbox_var1.set(0)  # Desmarca Bootloader
+        checkbox_var3.set(0)  # Desmarca Lock
 
 def on_checkbox3_toggle():
     # LOCK
@@ -124,6 +132,9 @@ def on_checkbox3_toggle():
     # Nenhum checkbox selecionado
     if checkbox_var1.get() == 0 and checkbox_var2.get() == 0 and checkbox_var3.get() == 0 :
         upload_cmd_button.configure(state='disabled')
+    # Se programdor selecionado for "Arduino"
+    if prog_select_combo.get() == "Arduino" :
+        checkbox_var3.set(0)  # Desmarca Bootloader
 
 def send_command():
     text_dados.configure(state='normal')
@@ -137,19 +148,27 @@ def send_command():
     text_dados.update_idletasks()
         
     # Atualiza a variável upload_prog
-    upload_prog = prog_select_combo.get()
+    if prog_select_combo.get() == "ArduinoISP" :
+        upload_prog = "Arduino"
+        upload_baud = "19200"
+    elif prog_select_combo.get() == "Arduino" :
+        upload_prog = "Arduino"
+        upload_baud = "115200"
+    elif prog_select_combo.get() == "UsbAsp" :
+        upload_prog = "usbasp"
+        upload_baud = "19200"
     
     # Atualiza a variável upload_chip e upload_lock
-    if chip_select_combo.get() == "atmega328":
-        upload_chip = "m328"
+    if chip_select_combo.get() == "atmega328" :
+        upload_chip = "m328p"
         upload_lock = "0x0C"
-    elif chip_select_combo.get() == "atmega8":
+    elif chip_select_combo.get() == "atmega8" :
         upload_chip = "m8"
         upload_lock = "0x0C"
-    elif chip_select_combo.get() == "attiny13":
+    elif chip_select_combo.get() == "attiny13" :
         upload_chip = "t13"
         upload_lock = "0x3C"
-    elif chip_select_combo.get() == "attiny85":
+    elif chip_select_combo.get() == "attiny85" :
         upload_chip = "t85"
         upload_lock = "0xFC"
         
@@ -183,7 +202,7 @@ def send_command():
 
         # SKETCH
         if checkbox_var2.get() == 1:
-            comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U flash:w:{upload_file}:a"
+            comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b {upload_baud.strip()} -F -v -v -U flash:w:{upload_file}:a"
             text_cmd.delete("1.0", "end")
             text_cmd.insert("end", comando)
             resultado = subprocess.run(comando, shell=True, check=True, text=True, capture_output=True)
@@ -220,6 +239,12 @@ def send_command_extern():
     if resultado.stderr:
         text_dados.insert("end", resultado.stderr)
         text_dados.yview("end")  # Scroll automático para o fim
+
+def prog_select(event):
+    # Se programdor selecionado for "Arduino"
+    if prog_select_combo.get() == "Arduino" :
+        checkbox_var1.set(0)  # Desmarca Bootloader
+        checkbox_var3.set(0)  # Desmarca Lock
                  
 # Interface CustomTkinter
 root = ctk.CTk()
@@ -248,7 +273,7 @@ chip_select_combo.grid(row=0, column=0, padx=10, pady=10)
 chip_select_combo.set(chips[0])  # Seleciona o primeiro chip da lista
 
 # ComboBox para prog select
-prog_select_combo = ctk.CTkComboBox(frame_port, font=new_fonte, values=progs, width=125, state="readonly")
+prog_select_combo = ctk.CTkComboBox(frame_port, font=new_fonte, values=progs, command=prog_select, width=125, state="readonly")
 prog_select_combo.grid(row=0, column=1, padx=0, pady=10)
 prog_select_combo.set(progs[0])  # Seleciona o primeiro chip da lista
 
