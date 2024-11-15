@@ -143,9 +143,6 @@ def send_command():
     text_dados.update_idletasks()
     text_cmd.delete("1.0", "end")
     text_cmd.update_idletasks()
-    # Mensagem para usuário aguardar o upload
-    text_dados.insert("end", "Efetuando upload, aguarde...\n")
-    text_dados.update_idletasks()
         
     # Atualiza a variável upload_prog
     if prog_select_combo.get() == "ArduinoISP" :
@@ -193,32 +190,17 @@ def send_command():
                 comando = f"avrdude -u -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U lock:w:0x3F:m -U hfuse:w:0b11111011:m -U lfuse:w:0x7A:m"
             else:
                 comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U flash:w:{upload_boot}:a"
-            text_cmd.delete("1.0", "end")
-            text_cmd.insert("end", comando)
-            resultado = subprocess.run(comando, shell=True, check=True, text=True, capture_output=True)
-            if resultado.stderr:
-                text_dados.insert("end", resultado.stderr)
-                text_dados.yview("end")  # Scroll automático para o fim
-
+            status_process(comando)   
+            
         # SKETCH
         if checkbox_var2.get() == 1:
             comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b {upload_baud.strip()} -F -v -v -U flash:w:{upload_file}:a"
-            text_cmd.delete("1.0", "end")
-            text_cmd.insert("end", comando)
-            resultado = subprocess.run(comando, shell=True, check=True, text=True, capture_output=True)
-            if resultado.stderr:
-                text_dados.insert("end", resultado.stderr)
-                text_dados.yview("end")  # Scroll automático para o fim
+            status_process(comando)
                 
         # LOCK
         if checkbox_var3.get() == 1:
             comando = f"avrdude -u -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U lock:w:{upload_lock}:m"
-            text_cmd.delete("1.0", "end")
-            text_cmd.insert("end", comando)
-            resultado = subprocess.run(comando, shell=True, check=True, text=True, capture_output=True)
-            if resultado.stderr:
-                text_dados.insert("end", resultado.stderr)
-                text_dados.yview("end")  # Scroll automático para o fim
+            status_process(comando)
             
     except subprocess.CalledProcessError as e:
         text_dados.insert("end", f"O comando falhou com o código {e.returncode}.\n")
@@ -228,17 +210,36 @@ def send_command():
 
     text_dados.configure(state='disabled')
 
+def status_process(comando):
+    text_cmd.delete("1.0", "end")
+    text_cmd.insert("end", comando)
+    processo = subprocess.Popen(comando, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    for linha in processo.stderr:
+        # Decodifica a linha para texto
+        linha = linha.decode("utf-8").strip()
+        text_dados.insert(ctk.END, linha + "\n")
+        text_dados.see(ctk.END)  # Faz com que a nova linha fique visível
+        text_dados.update_idletasks()
+
+def send_command_extern():
+    text_dados.configure(state='normal')
+    text_dados.delete("1.0", "end")
+    text_dados.update_idletasks()
+    comando = text_cmd.get('1.0', 'end-1c')
+    processo = subprocess.Popen(comando, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    for linha in processo.stderr:
+        # Decodifica a linha para texto
+        linha = linha.decode("utf-8").strip()
+        text_dados.insert(ctk.END, linha + "\n")
+        text_dados.see(ctk.END)  # Faz com que a nova linha fique visível
+        text_dados.update_idletasks()
+    text_dados.configure(state='disabled')
+
 def get_bootloader_file(chip):
     global upload_boot
     dir_atual = os.path.dirname(__file__)
     upload_boot = Path(dir_atual) / f"bootloader_{chip}.hex"
 
-def send_command_extern():
-    comando = text_cmd.get('1.0', 'end-1c')
-    resultado = subprocess.run(comando, shell=True, check=True, text=True, capture_output=True)
-    if resultado.stderr:
-        text_dados.insert("end", resultado.stderr)
-        text_dados.yview("end")  # Scroll automático para o fim
 
 def prog_select(event):
     # Se programdor selecionado for "Arduino"
