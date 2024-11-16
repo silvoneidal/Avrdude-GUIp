@@ -237,9 +237,7 @@ def send_command_extern():
 
 def get_bootloader_file(chip):
     global upload_boot
-    dir_atual = os.path.dirname(__file__)
-    upload_boot = Path(dir_atual) / f"bootloader_{chip}.hex"
-
+    upload_boot = os.path.join(os.getcwd(), f"bootloader_{chip}.hex")
 
 def prog_select(event):
     # Se programdor selecionado for "Arduino"
