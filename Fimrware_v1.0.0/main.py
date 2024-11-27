@@ -185,11 +185,13 @@ def send_command():
     # Executa comando selecionado
     try:        
         # BOOTLOADER
-        if checkbox_var1.get() == 1:
-            if chip_select_combo.get() == "attiny13":
+        if checkbox_var1.get() == 1:            
+            if chip_select_combo.get() == "atmega8" or chip_select_combo.get() == "atmega328":
+                comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U lfuse:w:0xF7:m -U hfuse:w:0xD7:m -U efuse:w:0xFD:m -U lock:w:0xFF:m -U flash:w:{upload_boot}:a"
+            elif chip_select_combo.get() == "attiny13":
                 comando = f"avrdude -u -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U lock:w:0x3F:m -U hfuse:w:0b11111011:m -U lfuse:w:0x7A:m"
-            else:
-                comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U flash:w:{upload_boot}:a"
+            elif chip_select_combo.get() == "attiny85":
+                comando = f"avrdude -c {upload_prog.strip()} -p {upload_chip.strip()} -P {upload_port.strip()} -b 19200 -F -v -v -U lfuse:w:0xF1:m -U hfuse:w:0xDF:m -U efuse:w:0xFF:m -U lock:w:0xFF:m -U flash:w:{upload_boot}:a"
             status_process(comando)   
             
         # SKETCH
