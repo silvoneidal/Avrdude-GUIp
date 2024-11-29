@@ -246,7 +246,7 @@ def prog_select(event):
     if prog_select_combo.get() == "Arduino" :
         checkbox_var1.set(0)  # Desmarca Bootloader
         checkbox_var3.set(0)  # Desmarca Lock
-                 
+
 # Interface CustomTkinter
 root = ctk.CTk()
 root.title("Avrdude-GUI")
